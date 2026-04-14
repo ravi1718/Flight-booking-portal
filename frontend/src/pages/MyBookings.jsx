@@ -1,88 +1,132 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Spinner from '../components/UI/Spinner';
-import { Ticket, Plane, Calendar, ExternalLink } from 'lucide-react';
-import Button from '../components/UI/Button';
+import { useUser } from '@clerk/react';
+import { Ticket, Plane, Calendar, ExternalLink, ArrowRight, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const MyBookings = () => {
-    const { user } = useContext(AuthContext);
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { user } = useUser();
     const navigate = useNavigate();
+    const [bookings] = useState(() => {
+        const all = JSON.parse(localStorage.getItem('myBookings') || '[]');
+        return all;
+    });
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${user.token}` } };
-                const res = await axios.get(`http://localhost:5000/api/bookings`, config);
-                setBookings(res.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchBookings();
-    }, [user.token]);
-
-    if (loading) return <div className="pt-24"><Spinner /></div>;
+    const fmt = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
     return (
-        <div className="bg-gray-50 min-h-screen pt-24 pb-12">
+        <div className="min-h-screen bg-[#f0f4ff] pt-20 pb-16">
             <div className="container mx-auto px-4 max-w-5xl">
-                <div className="flex items-center mb-10">
-                    <div className="bg-primary p-3 rounded-xl mr-4"><Ticket className="text-white h-8 w-8" /></div>
-                    <h2 className="text-4xl font-bold text-gray-900">My Bookings</h2>
+                {/* Header */}
+                <div className="flex items-center justify-between mt-6 mb-8">
+                    <div>
+                        <h2 className="text-3xl font-extrabold text-gray-900">My Bookings</h2>
+                        <p className="text-gray-500 mt-1">Welcome back, {user?.firstName || 'Traveler'} ✈️</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/search')}
+                        className="flex items-center space-x-2 bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-all hover:scale-105 text-sm"
+                    >
+                        <Search className="h-4 w-4" /><span>Book Another</span>
+                    </button>
                 </div>
 
                 {bookings.length > 0 ? (
-                    <div className="grid gap-6">
-                        {bookings.map(booking => (
-                            <div key={booking._id} className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-6 w-full md:w-auto">
-                                    <div className="bg-blue-50 p-4 rounded-xl text-primary">
-                                        <Plane className="h-8 w-8" />
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500 text-sm mb-1 font-medium">Booking Ref #{booking._id.toString().substr(-8).toUpperCase()}</p>
-                                        <h3 className="font-bold text-xl text-gray-900">{booking.flight.from} <span className="text-gray-400 font-normal mx-2">-</span> {booking.flight.to}</h3>
-                                        <p className="text-gray-600 font-medium mt-1">{booking.flight.airline} • {booking.passengers.length} Passenger{booking.passengers.length > 1 ? 's' : ''}</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex flex-col mx-auto md:mx-0 w-full md:w-auto text-center md:text-left my-4 md:my-0">
-                                    <div className="flex items-center justify-center md:justify-start text-gray-500 mb-2 font-medium">
-                                        <Calendar className="w-4 h-4 mr-2" />
-                                        {new Date(booking.flight.departureTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </div>
-                                    <div className="font-bold text-3xl text-gray-900 mt-1">
-                                        ${booking.totalAmount}
-                                    </div>
-                                </div>
+                    <div className="space-y-5">
+                        {bookings.map((booking, idx) => (
+                            <motion.div
+                                key={booking._id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.07 }}
+                                className="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden hover:shadow-card-hover hover:border-blue-100 transition-all duration-300"
+                            >
+                                <div className="p-6">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-5">
+                                        {/* Airline Logo */}
+                                        <div className="flex items-center space-x-3 md:w-56">
+                                            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                                                {booking.flight.logo}
+                                            </div>
+                                            <div>
+                                                <p className="font-extrabold text-gray-900">{booking.flight.airline}</p>
+                                                <p className="text-xs text-gray-400">{booking.flight.flightNumber} · {booking.flight.class}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">Ref: <span className="font-mono font-bold text-blue-600">{booking._id}</span></p>
+                                            </div>
+                                        </div>
 
-                                <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-56 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 pl-0 md:pl-8">
-                                    <span className={`px-4 py-3 rounded-xl font-bold text-center text-sm uppercase tracking-wider ${booking.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                        {booking.paymentStatus}
-                                    </span>
-                                    {booking.paymentStatus === 'Paid' && (
-                                        <Button variant="secondary" className="w-full py-3" onClick={() => navigate(`/confirmation/${booking._id}`)}>
-                                            View Ticket <ExternalLink className="h-4 w-4 ml-2" />
-                                        </Button>
-                                    )}
+                                        {/* Route */}
+                                        <div className="flex items-center flex-1 gap-3">
+                                            <div className="text-center">
+                                                <p className="text-xl font-extrabold text-gray-900">{fmt(booking.flight.departureTime)}</p>
+                                                <p className="text-sm font-bold text-blue-700">{booking.flight.from.toUpperCase()}</p>
+                                            </div>
+                                            <div className="flex-1 flex flex-col items-center px-2">
+                                                <p className="text-xs text-gray-400 mb-1">{booking.flight.duration}</p>
+                                                <div className="w-full flex items-center">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                                    <div className="flex-1 h-px bg-blue-300" />
+                                                    <Plane className="h-3.5 w-3.5 text-blue-600 mx-1" />
+                                                    <div className="flex-1 h-px bg-blue-300" />
+                                                    <div className="w-2 h-2 rounded-full bg-blue-600" />
+                                                </div>
+                                                <p className={`text-xs mt-1 font-semibold ${booking.flight.stops === 0 ? 'text-green-600' : 'text-orange-500'}`}>
+                                                    {booking.flight.stops === 0 ? 'Non-stop' : '1 Stop'}
+                                                </p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-xl font-extrabold text-gray-900">{fmt(booking.flight.arrivalTime)}</p>
+                                                <p className="text-sm font-bold text-blue-700">{booking.flight.to.toUpperCase()}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Passengers & Amount */}
+                                        <div className="flex items-center gap-4 md:border-l md:border-gray-100 md:pl-5">
+                                            <div className="text-center">
+                                                <p className="text-xs text-gray-400 font-medium">{booking.passengers.length} Pax</p>
+                                                <p className="text-xl font-extrabold text-gray-900">₹{booking.totalAmount.toLocaleString()}</p>
+                                                <div className="flex items-center text-gray-400 text-xs mt-1">
+                                                    <Calendar className="h-3 w-3 mr-1" />
+                                                    {fmtDate(booking.flight.departureTime)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Status + Action */}
+                                        <div className="flex flex-col items-end gap-3 min-w-[120px]">
+                                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                                                booking.paymentStatus === 'Paid'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                                {booking.paymentStatus}
+                                            </span>
+                                            <button
+                                                onClick={() => navigate(`/confirmation/${booking._id}`)}
+                                                className="flex items-center space-x-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+                                            >
+                                                <span>View Ticket</span><ExternalLink className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm mt-8">
-                        <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="text-center py-28 bg-white rounded-3xl border border-gray-100 shadow-card">
+                        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Ticket className="h-10 w-10 text-gray-300" />
                         </div>
-                        <h3 className="text-3xl font-bold text-gray-800 mb-3">No bookings yet</h3>
-                        <p className="text-gray-500 mb-8 max-w-md mx-auto text-lg">Looks like you haven't booked any flights yet. Start planning your next adventure today!</p>
-                        <Button onClick={() => navigate('/search')} className="px-10 py-4 text-lg shadow-xl shadow-blue-500/20">Search Flights</Button>
+                        <h3 className="text-2xl font-bold text-gray-700 mb-3">No bookings yet</h3>
+                        <p className="text-gray-400 max-w-sm mx-auto mb-8">Looks like you haven't booked any flights yet. Start planning your next adventure!</p>
+                        <button
+                            onClick={() => navigate('/search')}
+                            className="inline-flex items-center space-x-2 bg-blue-600 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-all hover:scale-105"
+                        >
+                            <Search className="h-5 w-5" /><span>Search Flights</span><ArrowRight className="h-5 w-5" />
+                        </button>
                     </div>
                 )}
             </div>

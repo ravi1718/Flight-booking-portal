@@ -1,100 +1,153 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import Spinner from '../components/UI/Spinner';
-import Button from '../components/UI/Button';
-import { Plane, Clock, MapPin } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useBooking } from '../context/BookingContext';
+import { useUser } from '@clerk/react';
+import { Plane, Clock, MapPin, Wifi, UtensilsCrossed, Tv, ArrowLeft, Shield, Tag } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 
 const FlightDetails = () => {
-    const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext);
-    const [flight, setFlight] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { selectedFlight: flight } = useBooking();
+    const { isSignedIn } = useUser();
 
-    useEffect(() => {
-        const fetchFlight = async () => {
-            try {
-                const res = await axios.get(`http://localhost:5000/api/flights/${id}`);
-                setFlight(res.data);
-            } catch (error) {
-                toast.error('Failed to load flight details');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchFlight();
-    }, [id]);
+    if (!flight) {
+        return (
+            <div className="min-h-screen bg-[#f0f4ff] pt-28 flex items-center justify-center">
+                <div className="text-center">
+                    <Plane className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-700 mb-2">No flight selected</h2>
+                    <button onClick={() => navigate('/search')} className="mt-4 text-blue-600 font-semibold hover:underline">Search Flights →</button>
+                </div>
+            </div>
+        );
+    }
 
-    if (loading) return <div className="pt-24"><Spinner /></div>;
-    if (!flight) return <div className="pt-24 text-center">Flight not found</div>;
-
-    const formatTime = (d) => new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const formatDate = (d) => new Date(d).toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const fmt = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     const handleContinue = () => {
-        if (!user) {
-            toast.info('Please login to book a flight');
-            navigate('/login');
-        } else {
-            navigate(`/book/${flight._id}`);
+        if (!isSignedIn) {
+            toast.info('Please sign in to book a flight');
+            return;
         }
+        navigate(`/book/${flight._id}`);
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen pt-24 pb-12">
+        <div className="min-h-screen bg-[#f0f4ff] pt-20 pb-16">
             <div className="container mx-auto px-4 max-w-4xl">
-                <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-primary to-blue-800 p-8 text-white flex justify-between items-center">
-                        <div>
-                            <h2 className="text-3xl font-bold mb-2">{flight.airline}</h2>
-                            <p className="opacity-90 flex items-center font-medium">Flight {flight.flightNumber}</p>
-                        </div>
-                        <Plane className="h-16 w-16 opacity-20" />
-                    </div>
-                    
-                    <div className="p-8">
-                        <div className="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-gray-100 pb-8">
-                            <div className="text-center md:text-left w-full md:w-auto">
-                                <p className="text-sm text-gray-500 font-medium mb-1 flex items-center justify-center md:justify-start">
-                                    <MapPin className="w-4 h-4 mr-1" /> Departure
-                                </p>
-                                <h3 className="text-4xl font-bold text-gray-900 mb-1">{formatTime(flight.departureTime)}</h3>
-                                <p className="text-lg font-bold text-primary">{flight.from}</p>
-                                <p className="text-sm text-gray-500 mt-2 font-medium">{formatDate(flight.departureTime)}</p>
-                            </div>
-                            
-                            <div className="flex flex-col items-center px-8 my-8 md:my-0">
-                                <div className="bg-blue-50 text-blue-600 px-5 py-2 rounded-full text-sm font-bold flex items-center mb-4">
-                                    <Clock className="w-4 h-4 mr-2" />
-                                    {flight.duration}
+                <button onClick={() => navigate(-1)} className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 font-medium mb-6 mt-4 transition-colors">
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to results</span>
+                </button>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-700 to-blue-900 p-8 text-white">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <div className="flex items-center space-x-3 mb-1">
+                                    <span className="text-3xl">{flight.logo}</span>
+                                    <h2 className="text-2xl font-extrabold">{flight.airline}</h2>
                                 </div>
-                                <Plane className="h-8 w-8 text-primary rotate-90 md:rotate-0" />
-                            </div>
-
-                            <div className="text-center md:text-right w-full md:w-auto">
-                                <p className="text-sm text-gray-500 font-medium mb-1 flex items-center justify-center md:justify-end">
-                                    <MapPin className="w-4 h-4 mr-1" /> Arrival
+                                <p className="text-blue-200 font-medium">
+                                    {flight.flightNumber} &nbsp;·&nbsp; {flight.class}
                                 </p>
-                                <h3 className="text-4xl font-bold text-gray-900 mb-1">{formatTime(flight.arrivalTime)}</h3>
-                                <p className="text-lg font-bold text-primary">{flight.to}</p>
-                                <p className="text-sm text-gray-500 mt-2 font-medium">{formatDate(flight.arrivalTime)}</p>
                             </div>
-                        </div>
-
-                        <div className="flex flex-col md:flex-row justify-between items-center bg-gray-50 p-8 rounded-2xl border border-gray-100">
-                            <div className="text-center md:text-left mb-6 md:mb-0">
-                                <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Economy Class</p>
-                                <h4 className="text-5xl font-bold text-gray-900">${flight.price} <span className="text-lg font-medium text-gray-500">/ person</span></h4>
+                            <div className="text-right">
+                                <p className="text-blue-200 text-sm">Price per person</p>
+                                <p className="text-4xl font-extrabold">₹{flight.price.toLocaleString()}</p>
                             </div>
-                            <Button onClick={handleContinue} className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-blue-500/30">
-                                Continue to Booking
-                            </Button>
                         </div>
                     </div>
-                </div>
+
+                    {/* Route */}
+                    <div className="p-8">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
+                            <div className="text-center md:text-left">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-center md:justify-start mb-1">
+                                    <MapPin className="h-3 w-3 mr-1" /> Departure
+                                </p>
+                                <p className="text-5xl font-extrabold text-gray-900">{fmt(flight.departureTime)}</p>
+                                <p className="text-xl font-bold text-blue-700 mt-1">{flight.from.toUpperCase()}</p>
+                                <p className="text-sm text-gray-400 mt-1">{fmtDate(flight.departureTime)}</p>
+                            </div>
+
+                            <div className="flex flex-col items-center">
+                                <div className="bg-blue-50 border border-blue-100 px-5 py-2 rounded-full text-sm font-bold text-blue-700 flex items-center mb-3">
+                                    <Clock className="h-4 w-4 mr-2" />{flight.duration}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-3 h-3 rounded-full border-2 border-blue-400" />
+                                    <div className="w-24 md:w-32 h-px bg-blue-300" />
+                                    <Plane className="h-5 w-5 text-blue-600" />
+                                    <div className="w-24 md:w-32 h-px bg-blue-300" />
+                                    <div className="w-3 h-3 rounded-full bg-blue-600" />
+                                </div>
+                                <p className={`text-sm font-bold mt-3 ${flight.stops === 0 ? 'text-green-600' : 'text-orange-500'}`}>
+                                    {flight.stops === 0 ? '✓ Non-stop flight' : `${flight.stops} stop(s)`}
+                                </p>
+                            </div>
+
+                            <div className="text-center md:text-right">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-center md:justify-end mb-1">
+                                    <MapPin className="h-3 w-3 mr-1" /> Arrival
+                                </p>
+                                <p className="text-5xl font-extrabold text-gray-900">{fmt(flight.arrivalTime)}</p>
+                                <p className="text-xl font-bold text-blue-700 mt-1">{flight.to.toUpperCase()}</p>
+                                <p className="text-sm text-gray-400 mt-1">{fmtDate(flight.arrivalTime)}</p>
+                            </div>
+                        </div>
+
+                        {/* Amenities */}
+                        {flight.amenities?.length > 0 && (
+                            <div className="flex flex-wrap gap-3 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <p className="w-full text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Included Amenities</p>
+                                {flight.amenities.map(a => (
+                                    <span key={a} className="flex items-center space-x-1.5 text-sm text-gray-700 bg-white px-3 py-2 rounded-xl border border-gray-100 font-medium shadow-sm">
+                                        {a === 'WiFi' && <Wifi className="h-4 w-4 text-blue-500" />}
+                                        {a === 'Meals' && <UtensilsCrossed className="h-4 w-4 text-orange-500" />}
+                                        {a === 'Entertainment' && <Tv className="h-4 w-4 text-purple-500" />}
+                                        <span>{a}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Fare Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            {[
+                                { icon: <Tag className="h-5 w-5 text-green-600" />, title: 'Refundable', desc: 'Partial refund on cancellation' },
+                                { icon: <Shield className="h-5 w-5 text-blue-600" />, title: 'Secure', desc: '100% safe payments' },
+                                { icon: <Plane className="h-5 w-5 text-purple-600" />, title: 'On-Time', desc: '92% on-time performance' },
+                            ].map(item => (
+                                <div key={item.title} className="flex items-center space-x-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <div className="bg-white p-2 rounded-lg shadow-sm">{item.icon}</div>
+                                    <div>
+                                        <p className="font-bold text-gray-800 text-sm">{item.title}</p>
+                                        <p className="text-xs text-gray-500">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Book CTA */}
+                        <div className="flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-blue-700 to-blue-900 p-6 rounded-2xl text-white">
+                            <div>
+                                <p className="text-blue-200 text-sm mb-1">Total for 1 passenger</p>
+                                <p className="text-4xl font-extrabold">₹{flight.price.toLocaleString()}</p>
+                                <p className="text-blue-200 text-xs mt-1">{flight.seatsAvailable} seats remaining at this price</p>
+                            </div>
+                            <button
+                                onClick={handleContinue}
+                                className="mt-4 md:mt-0 bg-white text-blue-700 font-extrabold px-10 py-4 rounded-xl hover:bg-blue-50 shadow-xl transition-all hover:scale-105 text-lg"
+                            >
+                                Continue to Booking →
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </div>
     );

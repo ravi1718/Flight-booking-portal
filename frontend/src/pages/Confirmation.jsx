@@ -1,72 +1,129 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import Spinner from '../components/UI/Spinner';
-import Button from '../components/UI/Button';
-import { CheckCircle, Download, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useBooking } from '../context/BookingContext';
+import { CheckCircle, Download, Plane, Calendar, Users, Hash, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Confetti from '../components/Confetti';
 
 const Confirmation = () => {
-    const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext);
-    const [booking, setBooking] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { currentBooking: booking } = useBooking();
 
-    useEffect(() => {
-        const fetchBooking = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${user.token}` } };
-                const res = await axios.get(`http://localhost:5000/api/bookings/${id}`, config);
-                setBooking(res.data);
-            } catch (error) {
-                navigate('/');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchBooking();
-    }, [id, user.token, navigate]);
-
-    if (loading) return <div className="pt-24"><Spinner /></div>;
-
-    return (
-        <div className="bg-gray-50 min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-            <div className="max-w-2xl w-full bg-white p-10 md:p-14 rounded-3xl shadow-xl border border-gray-100 text-center relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
-                <div className="flex justify-center mb-8">
-                    <CheckCircle className="h-24 w-24 text-green-500" />
-                </div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">Booking Confirmed!</h1>
-                <p className="text-xl text-gray-600 mb-10">Your e-ticket has been sent to <span className="font-bold text-gray-900">{user.email}</span></p>
-
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-left mb-10">
-                    <h3 className="font-bold text-gray-800 text-lg mb-4 border-b border-gray-200 pb-3 uppercase tracking-wider">Booking Reference</h3>
-                    <div className="flex justify-between items-center bg-white px-6 py-4 rounded-xl border border-gray-100 uppercase tracking-widest font-mono font-bold text-3xl text-primary mb-4 shadow-sm text-center justify-center">
-                        {booking?._id?.toString().substr(-8)}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-y-4 text-sm mt-6">
-                        <div>
-                            <p className="text-gray-500 mb-1 font-medium">Flight Details</p>
-                            <p className="font-bold text-gray-900 text-lg">{booking.flight.airline} {booking.flight.flightNumber}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-gray-500 mb-1 font-medium">Payment Status</p>
-                            <p className="font-bold text-green-500 text-lg">{booking.paymentStatus}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button variant="secondary" className="py-4 px-8 text-lg" onClick={() => window.print()}>
-                        <Download className="mr-2 h-5 w-5" /> Download Ticket
-                    </Button>
-                    <Button onClick={() => navigate('/my-bookings')} className="py-4 px-8 text-lg border-none shadow-xl shadow-blue-500/30">
-                        View My Bookings <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
+    if (!booking) {
+        return (
+            <div className="min-h-screen bg-[#f0f4ff] pt-28 flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-700 mb-4">Booking not found</h2>
+                    <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">← Go Home</button>
                 </div>
             </div>
+        );
+    }
+
+    const fmt = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    return (
+        <div className="min-h-screen bg-[#f0f4ff] pt-20 pb-16 flex items-center justify-center px-4">
+            <Confetti />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="max-w-2xl w-full"
+            >
+                {/* Success Card */}
+                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-10 text-white text-center">
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
+                            <CheckCircle className="h-20 w-20 mx-auto mb-4" />
+                        </motion.div>
+                        <h1 className="text-4xl font-extrabold mb-2">Booking Confirmed!</h1>
+                        <p className="text-green-100 text-lg">Your e-ticket has been sent to {booking.userEmail || 'your email'}</p>
+                    </div>
+
+                    <div className="p-8">
+                        {/* Booking Ref */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 mb-6">
+                            <div className="flex items-center space-x-2 mb-3">
+                                <Hash className="h-4 w-4 text-gray-400" />
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Booking Reference</p>
+                            </div>
+                            <p className="text-4xl font-extrabold text-blue-700 font-mono tracking-widest text-center py-3 bg-white rounded-xl border border-gray-100">
+                                {booking._id}
+                            </p>
+                        </div>
+
+                        {/* Flight Summary */}
+                        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-6">
+                            <div className="bg-gradient-to-r from-blue-700 to-blue-900 p-4 text-white flex justify-between items-center">
+                                <div>
+                                    <p className="font-bold">{booking.flight.airline}</p>
+                                    <p className="text-blue-200 text-xs">{booking.flight.flightNumber} · {booking.flight.class}</p>
+                                </div>
+                                <Plane className="h-6 w-6 text-blue-300" />
+                            </div>
+                            <div className="p-5">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div>
+                                        <p className="text-3xl font-extrabold text-gray-900">{fmt(booking.flight.departureTime)}</p>
+                                        <p className="text-blue-700 font-bold">{booking.flight.from.toUpperCase()}</p>
+                                    </div>
+                                    <div className="text-center text-gray-400 text-sm">
+                                        <p>{booking.flight.duration}</p>
+                                        <Plane className="h-4 w-4 mx-auto my-1 text-blue-500" />
+                                        <p>{booking.flight.stops === 0 ? 'Non-stop' : '1 Stop'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-3xl font-extrabold text-gray-900">{fmt(booking.flight.arrivalTime)}</p>
+                                        <p className="text-blue-700 font-bold">{booking.flight.to.toUpperCase()}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center text-gray-500 text-sm">
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    {fmtDate(booking.flight.departureTime)}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Passengers */}
+                        <div className="mb-6">
+                            <div className="flex items-center space-x-2 mb-3">
+                                <Users className="h-4 w-4 text-gray-400" />
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Passengers</p>
+                            </div>
+                            <div className="space-y-2">
+                                {booking.passengers.map((p, i) => (
+                                    <div key={i} className="flex justify-between py-2 px-4 bg-gray-50 rounded-xl border border-gray-100 text-sm">
+                                        <span className="font-semibold text-gray-800">{p.name}</span>
+                                        <span className="text-gray-500">{p.gender} · Age {p.age}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="flex justify-between items-center bg-green-50 border border-green-100 rounded-xl px-5 py-4 mb-8">
+                            <span className="text-gray-700 font-semibold">Amount Paid</span>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-2xl font-extrabold text-green-700">₹{booking.totalAmount.toLocaleString()}</span>
+                                <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">PAID</span>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button onClick={() => window.print()}
+                                className="flex-1 flex items-center justify-center space-x-2 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                                <Download className="h-5 w-5" /><span>Download Ticket</span>
+                            </button>
+                            <button onClick={() => navigate('/my-bookings')}
+                                className="flex-1 flex items-center justify-center space-x-2 py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:scale-105">
+                                <span>View My Bookings</span><ArrowRight className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 };
