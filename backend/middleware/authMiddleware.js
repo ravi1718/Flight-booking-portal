@@ -1,22 +1,24 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { verifyToken } = require('@clerk/backend');
 
 const protect = async (req, res, next) => {
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey_change_me_in_production');
-            req.user = await User.findById(decoded.id).select('-password');
-            if (!req.user) {
-                return res.status(401).json({ message: 'User not found' });
-            }
-            next();
-        } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
-        }
-    } else {
-        res.status(401).json({ message: 'Not authorized, no token' });
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Not authorized, no token' });
+    }
+    const token = header.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+        return res.status(401).json({ message: 'Not authorized, no token' });
+    }
+    try {
+        const payload = await verifyToken(token, {
+            secretKey: process.env.CLERK_SECRET_KEY,
+        });
+        req.auth = { userId: payload.sub };
+        next();
+    } catch (err) {
+        console.error('[Auth] Clerk verifyToken failed — name:', err.name, '| message:', err.message);
+        if (err.errors) console.error('[Auth] Clerk errors:', JSON.stringify(err.errors));
+        res.status(401).json({ message: 'Token invalid or expired' });
     }
 };
 

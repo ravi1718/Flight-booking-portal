@@ -1,15 +1,26 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useUser } from '@clerk/react';
 import { Plane, Clock, MapPin, Wifi, UtensilsCrossed, Tv, ArrowLeft, Shield, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { getFlightById } from '../services/flightService';
 
 const FlightDetails = () => {
     const navigate = useNavigate();
-    const { selectedFlight: flight } = useBooking();
+    const { id } = useParams();
+    const { selectedFlight: flight, selectFlight } = useBooking();
     const { isSignedIn } = useUser();
+
+    // If user navigated directly via URL and flight isn't in context, fetch it
+    useEffect(() => {
+        if (!flight && id) {
+            getFlightById(id)
+                .then(data => selectFlight(data))
+                .catch(() => toast.error('Could not load flight details'));
+        }
+    }, [id]);
 
     if (!flight) {
         return (
@@ -17,7 +28,7 @@ const FlightDetails = () => {
                 <div className="text-center">
                     <Plane className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-700 mb-2">No flight selected</h2>
-                    <button onClick={() => navigate('/search')} className="mt-4 text-blue-600 font-semibold hover:underline">Search Flights →</button>
+                    <button onClick={() => navigate('/')} className="mt-4 text-blue-600 font-semibold hover:underline">Search Flights →</button>
                 </div>
             </div>
         );
@@ -48,7 +59,7 @@ const FlightDetails = () => {
                         <div className="flex justify-between items-center">
                             <div>
                                 <div className="flex items-center space-x-3 mb-1">
-                                    <span className="text-3xl">{flight.logo}</span>
+                                    <span className="text-3xl">{flight.logo || '✈️'}</span>
                                     <h2 className="text-2xl font-extrabold">{flight.airline}</h2>
                                 </div>
                                 <p className="text-blue-200 font-medium">

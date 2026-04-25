@@ -28,6 +28,7 @@ export const BookingProvider = ({ children }) => {
         setCurrentBooking(null);
         sessionStorage.removeItem('selectedFlight');
         sessionStorage.removeItem('currentBooking');
+        localStorage.removeItem('myBookings');
     };
 
     return (

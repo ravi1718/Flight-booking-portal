@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
-import { useUser } from '@clerk/react';
-import { User, Users, Plane, Clock, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { useAuth } from '@clerk/react';
+import { User, Plane, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { createBooking } from '../services/bookingService';
 
 const Booking = () => {
     const navigate = useNavigate();
     const { selectedFlight: flight, saveBooking } = useBooking();
-    const { user } = useUser();
+    const { getToken } = useAuth();
     const [passengers, setPassengers] = useState([{ name: '', age: '', gender: 'Male' }]);
+    const [loading, setLoading] = useState(false);
 
     if (!flight) {
         return (
             <div className="min-h-screen bg-[#f0f4ff] pt-28 flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-700 mb-4">No flight selected</h2>
-                    <button onClick={() => navigate('/search')} className="text-blue-600 font-semibold hover:underline">← Search Flights</button>
+                    <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">← Search Flights</button>
                 </div>
             </div>
         );
@@ -32,22 +34,25 @@ const Booking = () => {
         const p = [...passengers]; p[i][field] = val; setPassengers(p);
     };
 
-    const handleBook = () => {
+    const handleBook = async () => {
         for (let p of passengers) {
             if (!p.name.trim() || !p.age) return toast.error('Please fill all passenger details');
         }
-        const booking = {
-            _id: 'BK' + Math.random().toString(36).substr(2, 8).toUpperCase(),
-            flight,
-            passengers,
-            totalAmount,
-            paymentStatus: 'Pending',
-            userEmail: user?.emailAddresses?.[0]?.emailAddress || '',
-            userName: user?.fullName || '',
-            bookedAt: new Date().toISOString(),
-        };
-        saveBooking(booking);
-        navigate(`/payment/${booking._id}`);
+        setLoading(true);
+        try {
+            const createdBooking = await createBooking(
+                { flightId: flight._id, passengers, totalAmount },
+                getToken
+            );
+            // Enrich with full flight object for Payment page display
+            saveBooking({ ...createdBooking, flight });
+            navigate(`/payment/${createdBooking._id}`);
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Booking failed. Please try again.';
+            toast.error(msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -128,7 +133,6 @@ const Booking = () => {
                         <div className="bg-gray-900 rounded-2xl p-6 text-white sticky top-24">
                             <h3 className="font-bold text-lg mb-5 pb-4 border-b border-gray-700">Booking Summary</h3>
 
-                            {/* Mini flight card */}
                             <div className="bg-gray-800 rounded-xl p-4 mb-5">
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="text-sm font-bold text-gray-300">{flight.airline}</span>
@@ -170,9 +174,13 @@ const Booking = () => {
                                 </div>
                             </div>
 
-                            <button onClick={handleBook}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-105 text-base">
-                                Proceed to Payment →
+                            <button onClick={handleBook} disabled={loading}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-105 text-base disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+                                {loading ? (
+                                    <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Creating Booking...</span></>
+                                ) : (
+                                    <span>Proceed to Payment →</span>
+                                )}
                             </button>
                         </div>
                     </div>

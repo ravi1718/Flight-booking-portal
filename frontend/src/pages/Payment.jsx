@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
+import { useAuth } from '@clerk/react';
 import { CreditCard, Lock, ArrowLeft, CheckCircle, Plane } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { confirmPayment } from '../services/bookingService';
 
 const Payment = () => {
     const navigate = useNavigate();
     const { currentBooking: booking, saveBooking } = useBooking();
+    const { getToken } = useAuth();
     const [verifying, setVerifying] = useState(false);
     const [cardNum, setCardNum] = useState('');
     const [expiry, setExpiry] = useState('');
@@ -19,7 +22,7 @@ const Payment = () => {
             <div className="min-h-screen bg-[#f0f4ff] pt-28 flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-700 mb-4">No booking found</h2>
-                    <button onClick={() => navigate('/search')} className="text-blue-600 font-semibold hover:underline">← Search Flights</button>
+                    <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">← Search Flights</button>
                 </div>
             </div>
         );
@@ -33,22 +36,21 @@ const Payment = () => {
         return d.length >= 3 ? d.slice(0, 2) + '/' + d.slice(2) : d;
     };
 
-    const handlePayment = (e) => {
+    const handlePayment = async (e) => {
         e.preventDefault();
         if (!cardNum || !expiry || !cvv || !name) return toast.error('Please fill all card details');
         setVerifying(true);
-        setTimeout(() => {
-            const confirmed = { ...booking, paymentStatus: 'Paid', paidAt: new Date().toISOString() };
-            saveBooking(confirmed);
-
-            // Save to "my bookings" in localStorage
-            const existing = JSON.parse(localStorage.getItem('myBookings') || '[]');
-            existing.unshift(confirmed);
-            localStorage.setItem('myBookings', JSON.stringify(existing));
-
-            toast.success('Payment Successful! 🎉');
-            navigate(`/confirmation/${booking._id}`);
-        }, 2500);
+        try {
+            const confirmed = await confirmPayment(booking._id, getToken);
+            // Enrich confirmed booking with the full flight object for Confirmation page display
+            saveBooking({ ...confirmed, flight: booking.flight });
+            toast.success('Payment Successful!');
+            navigate(`/confirmation/${confirmed._id}`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Payment failed. Please try again.');
+        } finally {
+            setVerifying(false);
+        }
     };
 
     return (
@@ -82,7 +84,7 @@ const Payment = () => {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-extrabold text-gray-900">Secure Payment</h2>
-                                    <p className="text-xs text-gray-400 flex items-center"><Lock className="h-3 w-3 mr-1" />256-bit SSL encryption</p>
+                                    <p className="text-xs text-gray-400 flex items-center"><Lock className="h-3 w-3 mr-1" />Test mode — no real charge</p>
                                 </div>
                             </div>
 
@@ -180,7 +182,7 @@ const Payment = () => {
                             <div className="space-y-3 text-sm mb-5">
                                 {booking.passengers.map((p, i) => (
                                     <div key={i} className="flex justify-between text-gray-400">
-                                        <span>{p.name || `Passenger ${i+1}`}</span>
+                                        <span>{p.name || `Passenger ${i + 1}`}</span>
                                         <span className="text-white font-semibold">₹{booking.flight.price.toLocaleString()}</span>
                                     </div>
                                 ))}
