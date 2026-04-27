@@ -46,7 +46,7 @@ const Booking = () => {
             );
             // Enrich with full flight object for Payment page display
             saveBooking({ ...createdBooking, flight });
-            navigate(`/payment/${createdBooking._id}`);
+            navigate(`/addons/${createdBooking._id}`);
         } catch (err) {
             const msg = err.response?.data?.message || 'Booking failed. Please try again.';
             toast.error(msg);
@@ -63,14 +63,14 @@ const Booking = () => {
                 </button>
 
                 {/* Progress Steps */}
-                <div className="flex items-center justify-center mb-8 space-x-4">
-                    {['Search', 'Select', 'Passengers', 'Payment', 'Confirm'].map((step, i) => (
+                <div className="flex items-center justify-center mb-8 space-x-2 overflow-x-auto pb-1">
+                    {['Search', 'Select', 'Passengers', 'Add-ons', 'Payment', 'Confirm'].map((step, i) => (
                         <React.Fragment key={step}>
-                            <div className={`flex items-center space-x-2 ${i <= 2 ? 'text-blue-600' : 'text-gray-300'}`}>
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i <= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>{i + 1}</div>
-                                <span className="text-xs font-semibold hidden md:block">{step}</span>
+                            <div className={`flex items-center space-x-1.5 ${i <= 2 ? 'text-blue-600' : 'text-gray-300'}`}>
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i <= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>{i + 1}</div>
+                                <span className="text-xs font-semibold hidden md:block whitespace-nowrap">{step}</span>
                             </div>
-                            {i < 4 && <div className={`flex-1 h-px max-w-10 ${i < 2 ? 'bg-blue-400' : 'bg-gray-200'}`} />}
+                            {i < 5 && <div className={`flex-1 h-px min-w-[12px] max-w-10 ${i < 2 ? 'bg-blue-400' : 'bg-gray-200'}`} />}
                         </React.Fragment>
                     ))}
                 </div>

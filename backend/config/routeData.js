@@ -1,15 +1,22 @@
-// Real Indian airline routes with scheduled departure times and base prices
-// Airlines: IndiGo (6E), Air India (AI), SpiceJet (SG), Vistara (UK),
+// Real airline routes with scheduled departure times and base prices
+// Domestic: IndiGo (6E), Air India (AI), SpiceJet (SG), Vistara (UK),
 //           AirAsia India (I5), Akasa Air (QP), Air India Express (IX)
+// International: Emirates (EK), Etihad (EY), British Airways (BA),
+//                Singapore Airlines (SQ), Qatar Airways (QR)
 
 const AIRLINES = [
-    { code: '6E', name: 'IndiGo',          logo: '🔵', baseMultiplier: 1.0  },
-    { code: 'AI', name: 'Air India',        logo: '🔴', baseMultiplier: 1.25 },
-    { code: 'SG', name: 'SpiceJet',         logo: '🟠', baseMultiplier: 0.90 },
-    { code: 'UK', name: 'Vistara',          logo: '🟣', baseMultiplier: 1.35 },
-    { code: 'I5', name: 'AirAsia India',    logo: '🟥', baseMultiplier: 0.85 },
-    { code: 'QP', name: 'Akasa Air',        logo: '🟡', baseMultiplier: 0.92 },
-    { code: 'IX', name: 'Air India Express',logo: '🔶', baseMultiplier: 0.95 },
+    { code: '6E', name: 'IndiGo',             logo: '🔵', baseMultiplier: 1.0  },
+    { code: 'AI', name: 'Air India',           logo: '🔴', baseMultiplier: 1.25 },
+    { code: 'SG', name: 'SpiceJet',            logo: '🟠', baseMultiplier: 0.90 },
+    { code: 'UK', name: 'Vistara',             logo: '🟣', baseMultiplier: 1.35 },
+    { code: 'I5', name: 'AirAsia India',       logo: '🟥', baseMultiplier: 0.85 },
+    { code: 'QP', name: 'Akasa Air',           logo: '🟡', baseMultiplier: 0.92 },
+    { code: 'IX', name: 'Air India Express',   logo: '🔶', baseMultiplier: 0.95 },
+    { code: 'EK', name: 'Emirates',            logo: '🇦🇪', baseMultiplier: 1.80 },
+    { code: 'EY', name: 'Etihad Airways',      logo: '🌙', baseMultiplier: 1.70 },
+    { code: 'BA', name: 'British Airways',     logo: '🇬🇧', baseMultiplier: 1.90 },
+    { code: 'SQ', name: 'Singapore Airlines',  logo: '🦁', baseMultiplier: 2.00 },
+    { code: 'QR', name: 'Qatar Airways',       logo: '🇶🇦', baseMultiplier: 1.85 },
 ];
 
 // Each route: { from, to, durationMins, basePrice (Economy INR), flightTimes[] }
@@ -179,6 +186,174 @@ const ROUTES = [
         from: 'COK', to: 'DEL', durationMins: 190, basePrice: 5800,
         airlines: ['6E','AI','IX'],
         flightTimes: [5, 9, 14, 21]
+    },
+
+    // ── INTERNATIONAL ROUTES ──────────────────────────────────────────────────
+
+    // DEL ↔ DXB (Delhi ↔ Dubai)
+    {
+        from: 'DEL', to: 'DXB', durationMins: 210, basePrice: 18000,
+        airlines: ['AI','EK','EY'],
+        flightTimes: [2, 6, 10, 14, 18, 22]
+    },
+    {
+        from: 'DXB', to: 'DEL', durationMins: 210, basePrice: 18000,
+        airlines: ['AI','EK','EY'],
+        flightTimes: [2, 7, 11, 15, 19, 23]
+    },
+    // BOM ↔ DXB (Mumbai ↔ Dubai)
+    {
+        from: 'BOM', to: 'DXB', durationMins: 185, basePrice: 16500,
+        airlines: ['AI','EK','EY'],
+        flightTimes: [1, 5, 9, 13, 17, 21]
+    },
+    {
+        from: 'DXB', to: 'BOM', durationMins: 185, basePrice: 16500,
+        airlines: ['AI','EK','EY'],
+        flightTimes: [3, 8, 12, 16, 20, 23]
+    },
+    // DEL ↔ DOH (Delhi ↔ Doha)
+    {
+        from: 'DEL', to: 'DOH', durationMins: 255, basePrice: 19000,
+        airlines: ['AI','QR'],
+        flightTimes: [3, 9, 15, 21]
+    },
+    {
+        from: 'DOH', to: 'DEL', durationMins: 255, basePrice: 19000,
+        airlines: ['AI','QR'],
+        flightTimes: [4, 10, 16, 22]
+    },
+    // BOM ↔ DOH (Mumbai ↔ Doha)
+    {
+        from: 'BOM', to: 'DOH', durationMins: 240, basePrice: 17500,
+        airlines: ['AI','QR'],
+        flightTimes: [2, 8, 14, 20]
+    },
+    {
+        from: 'DOH', to: 'BOM', durationMins: 240, basePrice: 17500,
+        airlines: ['AI','QR'],
+        flightTimes: [3, 9, 15, 21]
+    },
+    // DEL ↔ AUH (Delhi ↔ Abu Dhabi)
+    {
+        from: 'DEL', to: 'AUH', durationMins: 230, basePrice: 19500,
+        airlines: ['AI','EY'],
+        flightTimes: [4, 10, 16, 22]
+    },
+    {
+        from: 'AUH', to: 'DEL', durationMins: 230, basePrice: 19500,
+        airlines: ['AI','EY'],
+        flightTimes: [5, 11, 17, 23]
+    },
+    // DEL ↔ SIN (Delhi ↔ Singapore)
+    {
+        from: 'DEL', to: 'SIN', durationMins: 330, basePrice: 24000,
+        airlines: ['AI','SQ','I5'],
+        flightTimes: [1, 7, 13, 20]
+    },
+    {
+        from: 'SIN', to: 'DEL', durationMins: 330, basePrice: 24000,
+        airlines: ['AI','SQ','I5'],
+        flightTimes: [2, 8, 14, 21]
+    },
+    // BOM ↔ SIN (Mumbai ↔ Singapore)
+    {
+        from: 'BOM', to: 'SIN', durationMins: 315, basePrice: 22500,
+        airlines: ['AI','SQ'],
+        flightTimes: [2, 8, 14, 21]
+    },
+    {
+        from: 'SIN', to: 'BOM', durationMins: 315, basePrice: 22500,
+        airlines: ['AI','SQ'],
+        flightTimes: [3, 10, 16, 22]
+    },
+    // BLR ↔ SIN (Bangalore ↔ Singapore)
+    {
+        from: 'BLR', to: 'SIN', durationMins: 300, basePrice: 21000,
+        airlines: ['AI','SQ','I5'],
+        flightTimes: [1, 8, 15, 22]
+    },
+    {
+        from: 'SIN', to: 'BLR', durationMins: 300, basePrice: 21000,
+        airlines: ['AI','SQ','I5'],
+        flightTimes: [2, 9, 16, 23]
+    },
+    // DEL ↔ BKK (Delhi ↔ Bangkok)
+    {
+        from: 'DEL', to: 'BKK', durationMins: 270, basePrice: 20000,
+        airlines: ['AI','QR'],
+        flightTimes: [2, 9, 16, 22]
+    },
+    {
+        from: 'BKK', to: 'DEL', durationMins: 270, basePrice: 20000,
+        airlines: ['AI','QR'],
+        flightTimes: [3, 10, 17, 23]
+    },
+    // DEL ↔ LHR (Delhi ↔ London Heathrow)
+    {
+        from: 'DEL', to: 'LHR', durationMins: 550, basePrice: 52000,
+        airlines: ['AI','BA'],
+        flightTimes: [2, 9, 20]
+    },
+    {
+        from: 'LHR', to: 'DEL', durationMins: 550, basePrice: 52000,
+        airlines: ['AI','BA'],
+        flightTimes: [14, 20, 23]
+    },
+    // BOM ↔ LHR (Mumbai ↔ London Heathrow)
+    {
+        from: 'BOM', to: 'LHR', durationMins: 565, basePrice: 55000,
+        airlines: ['AI','BA'],
+        flightTimes: [1, 10, 21]
+    },
+    {
+        from: 'LHR', to: 'BOM', durationMins: 565, basePrice: 55000,
+        airlines: ['AI','BA'],
+        flightTimes: [13, 19, 22]
+    },
+    // DEL ↔ JFK (Delhi ↔ New York JFK)
+    {
+        from: 'DEL', to: 'JFK', durationMins: 870, basePrice: 72000,
+        airlines: ['AI'],
+        flightTimes: [2, 14]
+    },
+    {
+        from: 'JFK', to: 'DEL', durationMins: 870, basePrice: 72000,
+        airlines: ['AI'],
+        flightTimes: [22, 11]
+    },
+    // LAX ↔ DXB (Los Angeles ↔ Dubai)
+    {
+        from: 'LAX', to: 'DXB', durationMins: 980, basePrice: 95000,
+        airlines: ['EK'],
+        flightTimes: [9, 22]
+    },
+    {
+        from: 'DXB', to: 'LAX', durationMins: 980, basePrice: 95000,
+        airlines: ['EK'],
+        flightTimes: [8, 20]
+    },
+    // LHR ↔ DXB (London ↔ Dubai)
+    {
+        from: 'LHR', to: 'DXB', durationMins: 420, basePrice: 38000,
+        airlines: ['EK','BA'],
+        flightTimes: [8, 13, 19, 22]
+    },
+    {
+        from: 'DXB', to: 'LHR', durationMins: 420, basePrice: 38000,
+        airlines: ['EK','BA'],
+        flightTimes: [3, 9, 14, 21]
+    },
+    // JFK ↔ LHR (New York ↔ London)
+    {
+        from: 'JFK', to: 'LHR', durationMins: 420, basePrice: 62000,
+        airlines: ['BA'],
+        flightTimes: [22, 17, 10]
+    },
+    {
+        from: 'LHR', to: 'JFK', durationMins: 420, basePrice: 62000,
+        airlines: ['BA'],
+        flightTimes: [11, 17, 21]
     },
 ];
 

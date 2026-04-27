@@ -77,6 +77,28 @@ const confirmBookingPayment = async (req, res) => {
 
         const flight = booking.flight;
         const passengerCount = booking.passengers.length;
+        const { addOns } = req.body;
+
+        // Apply add-ons: update passenger meal preferences + recalculate total
+        if (addOns) {
+            let addOnsTotal = 0;
+
+            if (addOns.meals?.length) {
+                addOns.meals.forEach(m => {
+                    addOnsTotal += (m.price || 0);
+                    if (booking.passengers[m.passengerIndex]) {
+                        booking.passengers[m.passengerIndex].mealPreference = m.type || 'No Meal';
+                    }
+                });
+            }
+            if (addOns.extraBaggage?.price) addOnsTotal += addOns.extraBaggage.price;
+            if (addOns.insurance?.price)    addOnsTotal += addOns.insurance.price;
+            if (addOns.priorityBoarding?.price) addOnsTotal += addOns.priorityBoarding.price;
+            if (addOns.seatUpgrade?.price)  addOnsTotal += addOns.seatUpgrade.price;
+
+            booking.totalAmount += addOnsTotal;
+            booking.addOns = addOns;
+        }
 
         // Generate boarding pass
         const pnr = generatePNR();
@@ -91,12 +113,10 @@ const confirmBookingPayment = async (req, res) => {
             $inc: { seatsAvailable: -passengerCount }
         });
 
-        // Update booking
         booking.paymentStatus = 'Paid';
         booking.boardingPass = { pnr, seatNumbers, gate, terminal, boardingTime, barcodeData };
         const updatedBooking = await booking.save();
 
-        // Re-populate flight for response
         await updatedBooking.populate('flight');
         res.json(updatedBooking);
     } catch (error) {

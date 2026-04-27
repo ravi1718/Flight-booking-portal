@@ -64,6 +64,9 @@ const BoardingPass = ({ data, flight, passengers }) => {
                                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Passenger</p>
                                 <p className="font-black text-gray-900 text-lg">{passenger.name.toUpperCase()}</p>
                                 <p className="text-sm text-gray-600">{passenger.gender} · Age {passenger.age}</p>
+                                {passenger.mealPreference && passenger.mealPreference !== 'No Meal' && (
+                                    <p className="text-xs text-orange-600 font-semibold mt-1">🍽 Meal: {passenger.mealPreference}</p>
+                                )}
                             </div>
                         </div>
 

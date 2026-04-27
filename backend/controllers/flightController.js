@@ -5,6 +5,7 @@ const { AIRLINE_MAP, ROUTE_MAP, CABIN_CLASSES } = require('../config/routeData')
 const FLIGHT_NUMBER_SEEDS = {
     '6E': 200, 'AI': 400, 'SG': 600, 'UK': 800,
     'I5': 300, 'QP': 500, 'IX': 700,
+    'EK': 501, 'EY': 101, 'BA': 201, 'SQ': 321, 'QR': 742,
 };
 
 function minsToDisplay(mins) {

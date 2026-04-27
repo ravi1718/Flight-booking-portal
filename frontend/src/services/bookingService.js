@@ -15,7 +15,7 @@ export async function getBookingById(id, getToken) {
     return response.data;
 }
 
-export async function confirmPayment(bookingId, getToken) {
-    const response = await authRequest('put', `/bookings/${bookingId}/pay`, getToken, {});
+export async function confirmPayment(bookingId, addOns, getToken) {
+    const response = await authRequest('put', `/bookings/${bookingId}/pay`, getToken, { addOns: addOns || {} });
     return response.data;
 }

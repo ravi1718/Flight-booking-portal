@@ -109,6 +109,39 @@ const Confirmation = () => {
                                 </div>
                             </div>
 
+                            {/* Add-ons Summary */}
+                            {booking.addOns && (() => {
+                                const a = booking.addOns;
+                                const lines = [];
+                                if (a.meals?.some(m => m.type && m.type !== 'No Meal'))
+                                    lines.push({ label: 'Meals', value: `₹${a.meals.reduce((s,m) => s + (m.price||0), 0).toLocaleString()}` });
+                                if (a.extraBaggage?.kgs > 0)
+                                    lines.push({ label: `Extra Baggage (+${a.extraBaggage.kgs} kg)`, value: `₹${a.extraBaggage.price.toLocaleString()}` });
+                                if (a.insurance?.plan && a.insurance.plan !== 'None')
+                                    lines.push({ label: `Insurance (${a.insurance.plan})`, value: `₹${a.insurance.price}` });
+                                if (a.priorityBoarding?.selected)
+                                    lines.push({ label: 'Priority Boarding', value: `₹${a.priorityBoarding.price}` });
+                                if (a.seatUpgrade?.toClass)
+                                    lines.push({ label: `Upgrade → ${a.seatUpgrade.toClass}`, value: `₹${a.seatUpgrade.price.toLocaleString()}` });
+                                if (!lines.length) return null;
+                                return (
+                                    <div className="mb-6 print:hidden">
+                                        <div className="flex items-center space-x-2 mb-3">
+                                            <CheckCircle className="h-4 w-4 text-blue-400" />
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selected Add-ons</p>
+                                        </div>
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 space-y-2">
+                                            {lines.map(l => (
+                                                <div key={l.label} className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">{l.label}</span>
+                                                    <span className="font-semibold text-blue-700">{l.value}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             {/* Boarding Pass */}
                             {booking.boardingPass && (
                                 <div className="mb-6">

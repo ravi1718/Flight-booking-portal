@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import SearchResults from './pages/SearchResults';
 import FlightDetails from './pages/FlightDetails';
 import Booking from './pages/Booking';
+import AddOns from './pages/AddOns';
 import Payment from './pages/Payment';
 import Confirmation from './pages/Confirmation';
 import MyBookings from './pages/MyBookings';
@@ -57,6 +58,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
             <Route path="/flight/:id" element={<FlightDetails />} />
             <Route path="/book/:id" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
+            <Route path="/addons/:id" element={<ProtectedRoute><AddOns /></ProtectedRoute>} />
             <Route path="/payment/:id" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
             <Route path="/confirmation/:id" element={<ProtectedRoute><Confirmation /></ProtectedRoute>} />
             <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />

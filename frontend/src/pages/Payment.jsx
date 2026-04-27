@@ -41,7 +41,7 @@ const Payment = () => {
         if (!cardNum || !expiry || !cvv || !name) return toast.error('Please fill all card details');
         setVerifying(true);
         try {
-            const confirmed = await confirmPayment(booking._id, getToken);
+            const confirmed = await confirmPayment(booking._id, booking.pendingAddOns || {}, getToken);
             // Enrich confirmed booking with the full flight object for Confirmation page display
             saveBooking({ ...confirmed, flight: booking.flight });
             toast.success('Payment Successful!');
